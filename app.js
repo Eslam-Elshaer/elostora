@@ -86,5 +86,57 @@ document.querySelectorAll('[data-lecture-filter]').forEach(b=>b.addEventListener
 function renderTomorrow(){const planned=state.tasks.filter(t=>t.planned&&!t.done);$('dashboardTomorrow').innerHTML=planned.length?planned.map(t=>taskHTML(t,false)).join(''):'<div class="empty">مفيش حاجة مختارة لبكرة لسه. افتح خطة بكرة واختار مهامك.</div>';bindTasks($('dashboardTomorrow'));const open=state.tasks.filter(t=>!t.done);$('tomorrowEditor').innerHTML=open.length?open.map(t=>taskHTML(t,true)).join(''):'<div class="empty">مفيش مهام. ضيف مهمة من بنك المهام الأول.</div>';bindTasks($('tomorrowEditor'));}
 function render(){$('totalTasks').textContent=state.tasks.length;$('tomorrowTasks').textContent=state.tasks.filter(t=>t.planned&&!t.done).length;$('totalLectures').textContent=state.lectures.length;$('doneTasks').textContent=state.tasks.filter(t=>t.done).length;renderTasks();renderLectures();renderTomorrow();}
 // This timer works only while the page is open. Closed-page notifications require a push server/service.
-function checkNotices(){if(!('Notification' in window)||Notification.permission!=='granted')return;const now=new Date(),day=dateString(now),hm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;let changed=false;state.tasks.forEach(t=>{if(t.done)return;t.notifiedKeys=t.notifiedKeys||[];if(t.due===day&&(t.times||[]).includes(hm)){const key=`${day} ${hm} ${t.id}`;if(!t.notifiedKeys.includes(key)){try{new Notification('Elostora — وقت المذاكرة',{body:`متنساش: ${t.title}${t.subject?' · '+t.subject:''}`});t.notifiedKeys.push(key);changed=true;}catch(e){}}}});if(changed){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}}}
+
+async function checkNotices() {
+  if (!('Notification' in window) ||
+      Notification.permission !== 'granted') return;
+
+  if (!('serviceWorker' in navigator)) return;
+
+  let registration;
+  try {
+    registration = await navigator.serviceWorker.ready;
+  } catch (error) {
+    console.error('Service Worker error:', error);
+    return;
+  }
+
+  if (!registration.active) return;
+
+  const now = new Date();
+  const day = dateString(now);
+  const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  let changed = false;
+
+  for (const t of state.tasks) {
+    if (t.done || t.due !== day || !(t.times || []).includes(hm)) continue;
+
+    t.notifiedKeys = t.notifiedKeys || [];
+    const key = `${day} ${hm} ${t.id}`;
+
+    if (t.notifiedKeys.includes(key)) continue;
+
+    try {
+      await registration.showNotification('Elostora — وقت المذاكرة', {
+        body: `متنساش: ${t.title}${t.subject ? ' · ' + t.subject : ''}`,
+        tag: key
+      });
+
+      t.notifiedKeys.push(key);
+      changed = true;
+    } catch (error) {
+      console.error('Reminder notification error:', error);
+    }
+  }
+
+  if (changed) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Save reminder error:', error);
+    }
+  }
+}
+
 render();checkNotices();setInterval(checkNotices,10000);
