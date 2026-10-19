@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101321">
+  <title>Elostora | Study Hub</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="logo">E</div><div><h1>Elostora</h1><p>Study Hub</p></div></div>
+    <button id="notifyBtn" class="outline">تفعيل الإشعارات</button>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <p class="eyebrow">مساحة المذاكرة</p>
+      <button class="nav active" data-view="dashboard">◈ نظرة عامة</button>
+      <button class="nav" data-view="subjects">▤ المواد والمحاضرات</button>
+      <button class="nav" data-view="tasks">☷ بنك المهام</button>
+      <button class="nav" data-view="tomorrow">◷ خطة بكرة</button>
+      <div class="side-note"><span class="dot"></span> خطتك محفوظة على الجهاز</div>
+    </aside>
+
+    <section class="content">
+      <div class="welcome">
+        <div><p class="eyebrow">أهلاً بيك في مساحتك</p><h2 id="greeting">خلّي مذاكرتك تحت السيطرة.</h2><p class="muted">رتّب محاضراتك، خزّن كل اللي وراك، واختار مهام بكرة.</p></div>
+        <div class="date-pill" id="todayLabel"></div>
+      </div>
+
+      <section class="stats">
+        <article class="stat"><span>كل المهام</span><strong id="totalTasks">0</strong><small>في بنك المهام</small></article>
+        <article class="stat"><span>مهام بكرة</span><strong id="tomorrowTasks">0</strong><small>في خطتك القادمة</small></article>
+        <article class="stat"><span>المحاضرات والسكاشن</span><strong id="totalLectures">0</strong><small>في سجل المواد</small></article>
+        <article class="stat"><span>المهام المكتملة</span><strong id="doneTasks">0</strong><small>إنجازاتك</small></article>
+      </section>
+
+      <section class="panel view" id="dashboardView">
+        <div class="section-head"><div><h3>خطة بكرة</h3><p class="muted">الحاجات اللي اخترت تركز عليها بكرة</p></div><button class="primary" data-goto="tomorrow">رتّب خطة بكرة ←</button></div>
+        <div id="dashboardTomorrow" class="task-list"></div>
+      </section>
+
+      <section class="panel view hidden" id="subjectsView">
+        <div class="section-head"><div><h3>المواد والمحاضرات</h3><p class="muted">سجّل المحاضرات والسكاشن وشوف عدد كل مادة</p></div></div>
+        <div class="lecture-tabs" role="tablist"><button class="lecture-tab active" data-lecture-filter="all">كل السجل</button><button class="lecture-tab" data-lecture-filter="محاضرة">المحاضرات</button><button class="lecture-tab" data-lecture-filter="سكشن">السكاشن</button><button class="lecture-tab" data-lecture-filter="مراجعة">المراجعات</button></div><div id="subjectCounts" class="subject-counts"></div>
+        <form id="lectureForm" class="form-grid">
+          <label>اسم المادة<input id="subjectName" placeholder="مثلاً: رياضة" required></label>
+          <label>نوع المحاضرة<select id="lectureType"><option>محاضرة</option><option>سكشن</option><option>مراجعة</option></select></label>
+          <label class="wide">عنوان المحاضرة أو الموضوع<input id="lectureTitle" placeholder="مثلاً: Lecture 3 - Integration" required></label>
+          <label>التاريخ<input id="lectureDate" type="date"></label>
+          <button class="primary align-end" type="submit">+ إضافة للسجل</button>
+        </form>
+        <div id="lectureList" class="lecture-list"></div>
+      </section>
+
+      <section class="panel view hidden" id="tasksView">
+        <div class="section-head"><div><h3>بنك المهام</h3><p class="muted">حط كل اللي وراك هنا، وبعدها اختار منه مهام بكرة</p></div></div>
+        <form id="taskForm" class="form-grid">
+          <label class="wide">المهمة<input id="taskTitle" placeholder="مثلاً: حل واجب المحاضرة الثانية" required></label>
+          <label>المادة<input id="taskSubject" placeholder="اسم المادة (اختياري)"></label>
+          <label>تاريخ التسليم<input id="taskDue" type="date"></label>
+          <label>الأولوية<select id="taskPriority"><option value="عادية">عادية</option><option value="مهمة">مهمة</option><option value="عاجلة">عاجلة</option></select></label>
+          <label class="wide">مواعيد التذكير (حتى 3 مواعيد)<div class="reminder-row"><input class="taskReminderTime" type="time" value="09:00" aria-label="التذكير الأول"><input class="taskReminderTime" type="time" value="15:00" aria-label="التذكير الثاني"><input class="taskReminderTime" type="time" value="20:00" aria-label="التذكير الثالث"></div></label>
+          <button class="primary align-end" type="submit">+ إضافة المهمة</button>
+        </form>
+        <div class="filters"><button class="filter active" data-filter="all">الكل</button><button class="filter" data-filter="open">غير مكتملة</button><button class="filter" data-filter="done">مكتملة</button></div>
+        <div id="taskList" class="task-list"></div>
+      </section>
+
+      <section class="panel view hidden" id="tomorrowView">
+        <div class="section-head"><div><h3>خطة بكرة</h3><p class="muted">اختار المهام من بنك المهام وحدد وقت التذكير</p></div><span class="date-pill" id="tomorrowLabel"></span></div>
+        <div class="notice"><strong>معلومة مهمة:</strong> الخطة بتتحفظ على الجهاز. إشعارات الويب قد تحتاج إن الموقع يكون منشورًا على HTTPS، والسلوك بالخلفية يختلف حسب الجهاز والمتصفح.</div>
+        <div id="tomorrowEditor" class="task-list"></div>
+      </section>
+
+      <footer>Elostora Study Hub <span>•</span> نسخة بداية مجانية</footer>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>

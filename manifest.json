@@ -1,0 +1,9 @@
+{
+  "name": "Elostora Study Hub",
+  "short_name": "Elostora",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0e18",
+  "theme_color": "#101321",
+  "description": "Study planner and task tracker"
+}
