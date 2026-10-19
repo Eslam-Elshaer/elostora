@@ -28,7 +28,52 @@ function getTimes(selector){return [...document.querySelectorAll(selector)].map(
 function resetTimes(selector){['09:00','15:00','20:00'].forEach((v,i)=>{const el=document.querySelectorAll(selector)[i];if(el)el.value=v;});}
 $('lectureForm').addEventListener('submit',e=>{e.preventDefault();const subject=$('subjectName').value.trim(),title=$('lectureTitle').value.trim();if(!subject||!title)return;state.lectures.push({id:makeId(),subject,type:$('lectureType').value,title,date:$('lectureDate').value||dateString(today),status:'لسه'});e.target.reset();$('lectureDate').value=dateString(today);save();showView('subjects');toast('اتضافت للمادة بنجاح');});
 $('taskForm').addEventListener('submit',e=>{e.preventDefault();const title=$('taskTitle').value.trim();if(!title)return;state.tasks.push({id:makeId(),title,subject:$('taskSubject').value.trim(),due:$('taskDue').value||dateString(tomorrow),priority:$('taskPriority').value,times:getTimes('.taskReminderTime'),done:false,planned:false,notifiedKeys:[]});e.target.reset();$('taskDue').value=dateString(tomorrow);resetTimes('.taskReminderTime');save();toast('اتضافت المهمة');});
-$('notifyBtn').addEventListener('click',async()=>{if(!('Notification' in window)){toast('المتصفح لا يدعم الإشعارات');return;}try{const p=await Notification.requestPermission();if(p==='granted'){try{if('serviceWorker' in navigator && location.protocol==='https:'){const reg=await navigator.serviceWorker.ready;await reg.showNotification('Elostora — اختبار إشعار',{body:'تمام! الإشعارات اتفعّلت على الجهاز.'});}else{new Notification('Elostora — اختبار إشعار',{body:'الإشعارات شغالة أثناء فتح الموقع.'});}toast('تم تفعيل الإشعارات وإرسال إشعار تجريبي');}catch(e){toast('المتصفح منع الإشعار. راجع أذونات الموقع في إعدادات Chrome');}}else toast('لازم تسمح بالإشعارات من إعدادات المتصفح');}catch(e){toast('افتح الموقع عبر Live Server أو HTTPS');}});
+
+$('notifyBtn').addEventListener('click', async () => {
+  if (!window.isSecureContext) {
+    toast('افتح الموقع من رابط HTTPS الرسمي');
+    return;
+  }
+
+  if (!('Notification' in window)) {
+    toast('المتصفح لا يدعم الإشعارات');
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission !== 'granted') {
+      toast('الإشعارات غير مسموح بها: ' + permission);
+      return;
+    }
+
+    if (!('serviceWorker' in navigator)) {
+      toast('المتصفح لا يدعم Service Worker');
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+
+    if (!registration.active) {
+      toast('خدمة الإشعارات لم تبدأ. حدّث الصفحة وجرب تاني');
+      return;
+    }
+
+    await registration.showNotification('Elostora — اختبار إشعار', {
+      body: 'تمام! الإشعارات اتفعّلت على الجهاز.',
+      icon: './icon-192.png',
+      tag: 'elostora-test',
+      vibrate: [200, 100, 200]
+    });
+
+    toast('تم إرسال الإشعار التجريبي');
+  } catch (error) {
+    console.error('Elostora notification error:', error);
+    toast('خطأ في الإشعارات: ' + (error.message || error.name || 'خطأ غير معروف'));
+  }
+});
+
 function toggleTask(id){const t=state.tasks.find(x=>x.id===id);if(t){t.done=!t.done;save();}}
 function togglePlan(id){const t=state.tasks.find(x=>x.id===id);if(t){t.planned=!t.planned;if(t.planned)t.due=dateString(tomorrow);save();toast(t.planned?'اتضافت لخطة بكرة':'اتشالت من خطة بكرة');}}
 function deleteTask(id){state.tasks=state.tasks.filter(x=>x.id!==id);save();toast('اتحذفت المهمة');}
